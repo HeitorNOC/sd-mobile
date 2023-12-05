@@ -1,67 +1,137 @@
-// Home.tsx
-
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Post from '../../components/post';
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { AntDesign } from '@expo/vector-icons';
 
 type RootStackParamList = {
-  Home: { userId: string; username: string; fullName: string };
+  Home: { id: number; username: string; name: string };
 };
 
-// Definindo tipos para route e navigation props
-
-
 const Home = ({ route }: any) => {
-  const { userId, username, fullName } = route.params;
+  const [loggedInUser, setLoggedInUser] = useState();
+  const [loggedInUsername, setLoggedInUsername] = useState('');
+  const [posts, setPosts] = useState([]);
+  const [newPostText, setNewPostText] = useState('');
 
-  const [loggedInUser, setLoggedInUser] = useState(userId);
+  useEffect(() => {
+    init();
+    
+  }, []);
 
-  const [posts, setPosts] = useState([
-    { id: 1, text: 'Post 1', username: 'user', likes: 1, likedBy: ['adm'] },
-    { id: 2, text: 'Post 2', username: 'adm', likes: 0, likedBy: [] },
-    // ... Outros posts
-  ]);
+  async function init() {
+    const { id, username, name } = route.params.user;
+    setLoggedInUser(id)
+    setLoggedInUsername(username)
+    await fetch('http://sdmobile-back-production.up.railway.app/api/posts')
+      .then(response => response.json())
+      .then(json => {
+        setPosts(json);
+      });
+  }
 
-  const handleLikePost = (postId: number, like: boolean) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id === postId) {
-          const likedBy = post.likedBy.slice();
-
-          if (like) {
-            if (!likedBy.includes(loggedInUser)) {
-              likedBy.push(loggedInUser);
-              return { ...post, likes: post.likes + 1, likedBy };
-            }
-          } else {
-            const index = likedBy.indexOf(loggedInUser);
-            if (index > -1) {
-              likedBy.splice(index, 1);
-              return { ...post, likes: post.likes - 1, likedBy };
-            }
-          }
-        }
-        return post;
+  const handlePost = async () => {
+    try {
+       const res = await fetch('http://sdmobile-back-production.up.railway.app/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: newPostText,
+          publicationDate: new Date(),
+          likedBy: [],
+          likes: 0,
+          username: loggedInUsername
+        })
       })
-    );
+      if (res.status != 201) {
+        window.alert('Erro ao criar post.')
+      } 
+      init();
+      setNewPostText('');
+    } catch (e) {
+      console.log('error: ', e)
+    }
+
+    
+
+
+
   };
 
-  return (
-    <ScrollView>
-      <View>
-        {posts.map((post) => (
+  const handleLike = async (postId: number) => {
+
+    // await fetch(`http://sdmobile-back-production.up.railway.app/api/posts/${postId}/like`, {
+    //   method: 'POST',
+    // });
+    // Após curtir o post, atualizar a lista de posts
+    init();
+  };
+
+  return ( 
+    <ScrollView style={styles.container}>
+
+      <View style={styles.postInputContainer}>
+        <TextInput
+          placeholder="Digite seu post..."
+          value={newPostText}
+          onChangeText={text => setNewPostText(text)}
+          style={styles.postInput}
+        />
+        <TouchableOpacity onPress={handlePost} style={styles.postButton}>
+          <Text style={styles.postButtonText}>Postar</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.postsContainer}>
+        {posts.map((post: any) => (
           <Post
             key={post.id}
             post={post}
-            onLikePress={handleLikePost}
-            currentUser={loggedInUser}
+            onLikePress={() => handleLike(post.id)}
+            currentUser={loggedInUser ? loggedInUser : '0'}
           />
         ))}
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  postInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
+  },
+  postInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    padding: 8,
+  },
+  postButton: {
+    marginLeft: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'blue',
+    borderRadius: 20,
+  },
+  postButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  postsContainer: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+});
 
 export default Home;

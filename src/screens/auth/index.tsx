@@ -1,28 +1,30 @@
+// Login.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-const Login = ({navigation}: any) => {
+const Login = ({ navigation }: any) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginMessage, setLoginMessage] = useState('');
 
   const handleLogin = async () => {
     try {
-      if (username == 'adm' && password == '123' || username == 'user' && password == '456') {
-        setLoginMessage('Login bem sucedido.')
-        const loggedUser = {
-          username, 
-          password,
-          name: username == 'adm' ? 'administrador' : 'usuario'
-        }
-        navigation.navigate('Home', { user: loggedUser })
-        setLoginMessage('')
-        setUsername('')
-        setPassword('')
-      } 
-      else {
-        setLoginMessage('Credenciais incorretas.')
-        //limpaar campos do formulario
+      const res = await fetch('http://sdmobile-back-production.up.railway.app/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+      const json = await res.json();
+      if (res.status === 200) {
+        setLoginMessage('Login bem sucedido.');
+        navigation.navigate('Home', { user: json });
+        setLoginMessage('');
+        setUsername('');
+        setPassword('');
+      } else {
+        setLoginMessage('Credenciais incorretas.');
       }
     } catch (error) {
       setLoginMessage('Erro ao fazer login. Tente novamente.');
@@ -32,7 +34,7 @@ const Login = ({navigation}: any) => {
 
   return (
     <View style={styles.container}>
-      <Text>Tela de Login</Text>
+      <Text style={styles.title}>Tela de Login</Text>
       <TextInput
         placeholder="Usuário"
         value={username}
@@ -46,10 +48,17 @@ const Login = ({navigation}: any) => {
         secureTextEntry
         style={styles.input}
       />
-      <TouchableOpacity onPress={handleLogin}>
-        <Text>Fazer Login</Text>
+      <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
+        <Text style={styles.loginButtonText}>Fazer Login</Text>
       </TouchableOpacity>
-      <Text>{loginMessage}</Text>
+      <Text style={styles.loginMessage}>{loginMessage}</Text>
+
+      {/* Linha de separação e botão "Criar Conta" */}
+      <View style={styles.separator} />
+      <Text style={styles.createAccountText}>Ainda não possui uma conta?</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.createAccountButton}>
+        <Text style={styles.createAccountButtonText}>Criar Conta</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -57,14 +66,58 @@ const Login = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //justifyContent: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
-    width: 200,
-    padding: 8,
+    width: '100%',
+    padding: 10,
     marginVertical: 8,
+    borderRadius: 5,
+  },
+  loginButton: {
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  loginMessage: {
+    marginTop: 10,
+    color: 'red',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#ccc',
+    width: '100%',
+    marginVertical: 20,
+  },
+  createAccountText: {
+    marginBottom: 10,
+  },
+  createAccountButton: {
+    backgroundColor: 'green',
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  createAccountButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
