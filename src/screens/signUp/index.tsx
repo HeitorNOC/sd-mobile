@@ -1,8 +1,7 @@
-// SignUp.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-const SignUp = () => {
+const SignUp = ({ navigation }: any) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -10,19 +9,35 @@ const SignUp = () => {
   const [signUpMessage, setSignUpMessage] = useState('');
 
   const handleAgeConfirmation = () => {
-    setIsOver18(!isOver18); // Alterna entre verdadeiro e falso ao ser clicado
+    setIsOver18(!isOver18); 
   };
 
-  const handleSignUp = () => {
+  async function handleSignUp  ()  {
     if (!isOver18) {
       setSignUpMessage('É necessário ter mais de 18 anos para criar uma conta.');
       return;
     }
-
-    // Lógica para criar a conta, usando os dados preenchidos nos campos
-    // ...
-
-    // Exemplo: console.log(username, password, name, isOver18);
+    try {
+      const res = await fetch('http://sdmobile-back-production.up.railway.app/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          name,
+          password
+        })
+      }) 
+      if(res.status !== 201) {
+        window.alert('Erro ao criar o usuário.')
+      } else {
+        window.alert('Usuário Criado com sucesso, faça o login.')
+        navigation.navigate('Login')
+      }
+    } catch(e) {
+      console.log('error: ', e)
+    }
   };
 
   return (

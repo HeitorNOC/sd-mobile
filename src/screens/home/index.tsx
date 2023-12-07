@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import Post from '../../components/post';
-import { AntDesign } from '@expo/vector-icons';
+
 
 type RootStackParamList = {
   Home: { id: number; username: string; name: string };
@@ -10,31 +11,36 @@ type RootStackParamList = {
 const Home = ({ route, navigation }: any) => {
   const [loggedInUser, setLoggedInUser] = useState();
   const [loggedInUsername, setLoggedInUsername] = useState('');
-  const [posts, setPosts] = useState([]);
+  const [loggedInName, setLoggedName] = useState('');
+  const [posts, setPosts] = useState<any>();
   const [newPostText, setNewPostText] = useState('');
 
   useEffect(() => {
     init();
-
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      init()
+    }, [])
+  );
 
   async function init() {
     const { id, username, name } = route.params.user;
-    console.log('username: ',username)
-    console.log('id: ',id)
     setLoggedInUser(id)
     setLoggedInUsername(username)
+    setLoggedName(name)
     await fetch('http://sdmobile-back-production.up.railway.app/api/posts')
       .then(response => response.json())
       .then(json => {
-        console.log(json)
+        
         setPosts(json);
       });
   }
 
   const handlePost = async () => {
     try {
-      const res = await fetch('http://sdmobile-back-production.up.railway.app/api/post', {
+      const res = await fetch('http://sdmobile-back-production.up.railway.app/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,13 +48,14 @@ const Home = ({ route, navigation }: any) => {
         body: JSON.stringify({
           text: newPostText,
           publicationDate: new Date(),
-          likedBy: [],
-          likes: 0,
-          username: loggedInUsername
+          userId: loggedInUser
         })
       })
       if (res.status != 201) {
-        window.alert('Erro ao criar post.')
+        
+        window.alert('Erro ao criar postagem.')
+      } else {
+        window.alert('Postagem criada com sucesso.')
       }
       init();
       setNewPostText('');
@@ -59,24 +66,38 @@ const Home = ({ route, navigation }: any) => {
   };
 
   async function handleNaviteToPost(postID: number) {
-   navigation.navigate('Post', { postID });
+    navigation.navigate('Post', { postID, loggedInUser });
   }
 
   const handleLike = async (postId: number) => {
+    try {
 
-    // await fetch(`http://sdmobile-back-production.up.railway.app/api/post/${postId}/like`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    // })
-
-    init();
+      const res = await fetch(`http://sdmobile-back-production.up.railway.app/api/likes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: loggedInUser,
+          postId
+        })
+      })
+      if(res.status != 500) {
+        init();
+      }
+    } catch(e) {
+      console.log('error: ', e)
+    }
   };
-
-  return (
+  
+  return posts ? (
     <ScrollView style={styles.container}>
-
+      <TouchableOpacity onPress={() => navigation.navigate('Profile', { loggedInUser })}>
+        <View style={styles.containerProfile}>
+          <Image source={require('../../../assets/avatar.jpg')} style={{ borderRadius: 999, width: 50, height: 50 }} />
+          <Text>{loggedInUsername}</Text>
+        </View>
+      </TouchableOpacity>
       <View style={styles.postInputContainer}>
         <TextInput
           placeholder="Digite seu post..."
@@ -91,26 +112,38 @@ const Home = ({ route, navigation }: any) => {
       <View style={styles.postsContainer}>
         {posts.map((post: any) => (
           <>
-            <TouchableOpacity onPress={() => handleNaviteToPost(post.id)}>
+            <TouchableOpacity key={post.id} onPress={() => handleNaviteToPost(post.id)}>
               <Post
                 key={post.id}
                 post={post}
                 onLikePress={() => handleLike(post.id)}
-                currentUser={loggedInUser ? loggedInUser : '0'}
-
+                currentUser={loggedInUser}
+                id={post.id}
               />
             </TouchableOpacity>
           </>
         ))}
       </View>
     </ScrollView>
-  );
+  ) : (
+    <></>
+  )
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  containerProfile: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 10,
+    gap: 5
   },
   postInputContainer: {
     flexDirection: 'row',

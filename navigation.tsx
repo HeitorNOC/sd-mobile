@@ -8,6 +8,7 @@ import Home from './src/screens/home';
 import SignUp from './src/screens/signUp';
 import Welcome from './src/screens/welcome';
 import PostActual from './src/screens/post';
+import Profile from './src/screens/profile';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ const Navigation = () => {
         <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignUp" component={SignUp} />
+        <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Post" component={PostActual} />
       </Stack.Navigator>

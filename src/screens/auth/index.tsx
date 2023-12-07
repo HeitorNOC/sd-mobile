@@ -34,7 +34,7 @@ const Login = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tela de Login</Text>
+      <Text style={styles.title}>Login</Text>
       <TextInput
         placeholder="Usuário"
         value={username}

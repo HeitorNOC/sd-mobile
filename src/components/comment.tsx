@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 interface CommentsFetch {
     id: number
@@ -14,9 +15,10 @@ interface CommentsFetch {
 
 interface CommentProps {
     id: number
+    userID: number
 }
 
-export default function Comment({ id }: CommentProps) {
+export default function Comment({ id, userID }: CommentProps) {
     const [comments, setComments] = useState<CommentsFetch[]>()
 
     useEffect(() => {
@@ -31,18 +33,55 @@ export default function Comment({ id }: CommentProps) {
                 setComments(json);
             });
     }
+
+    async function handleDeleteComment(commentID: number) {
+        try {
+            const res = await fetch('http://sdmobile-back-production.up.railway.app/api/comments', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userID,
+                    id: commentID
+                })
+            })
+            if (res.status != 204) {
+                
+                window.alert('Erro ao apagar comentário')
+            } else {
+                window.alert('Comentário apagado com sucesso')
+                init()
+            }
+
+        } catch (e) {
+            console.log('error: ', e)
+        }
+
+    }
     return comments ? (
         <>
-            {comments.map((comment) => (
-                <View style={styles.container}>
-                    <View style={styles.header}>
-                        <Text style={styles.username}>{comment.user.username}</Text>
-                        <Text style={styles.time}>Publicado às {new Date(comment.commentDate).toLocaleString()}</Text>
+            <ScrollView style={styles.scroll}>
+                {comments.map((comment) => (
+                    <View key={comment.id} style={styles.container}>
+                        <View style={styles.header}>
+                            <Text style={styles.username}>{comment.user.username}</Text>
+                            <Text style={styles.time}>Publicado em {new Date(comment.commentDate).toLocaleString()}</Text>
+                        </View>
+                        <Text style={styles.postText}>{comment.text}</Text>
+                        {
+                            comment.user.id == userID ? (
+                                <TouchableOpacity onPress={() => handleDeleteComment(comment.id)}>
+                                    <Feather name="trash-2" size={20} color="black" />
+                                </TouchableOpacity>
+                            ) : (
+                                <></>
+                            )
+                        }
                     </View>
-                    <Text style={styles.postText}>{comment.text}</Text>
-                </View>
-            ))
-            }
+                ))
+                }
+            </ScrollView>
         </>
     ) : (
         <></>
@@ -57,6 +96,9 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 12,
         backgroundColor: '#fff',
+    },
+    scroll: {
+        maxHeight: '70%'
     },
     header: {
         flexDirection: 'row',
