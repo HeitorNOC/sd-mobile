@@ -7,6 +7,7 @@ import Login from './src/screens/auth';
 import Home from './src/screens/home'; 
 import SignUp from './src/screens/signUp';
 import Welcome from './src/screens/welcome';
+import PostActual from './src/screens/post';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ const Navigation = () => {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Post" component={PostActual} />
       </Stack.Navigator>
     </NavigationContainer>
   );

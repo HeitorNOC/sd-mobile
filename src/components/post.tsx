@@ -2,22 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons'; // Certifique-se de instalar esse pacote
 
-interface PostProps {
-  post: {
-    id: number;
-    text: string;
-    username: string;
-    likes: number;
-    likedBy: string[];
-    publicationDate: Date;
-  };
-  onLikePress: (postId: number, like: boolean) => void;
-  currentUser: string;
-}
-
-const Post: React.FC<PostProps> = ({ post, onLikePress, currentUser }) => {
-  const [liked, setLiked] = useState(post.likedBy.includes(currentUser));
-
+const Post: React.FC<any> = ({ post, onLikePress, currentUser }) => {
+  const [liked, setLiked] = useState(true);
+  console.log('POST ON COMPONENT POST: ', post)
   const handleLike = () => {
     if (liked) {
       onLikePress(post.id, false);
@@ -31,7 +18,7 @@ const Post: React.FC<PostProps> = ({ post, onLikePress, currentUser }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.username}>{post.username}</Text>
+        <Text style={styles.username}>{post.user.username}</Text>
         <Text style={styles.time}>Publicado às {new Date(post.publicationDate).toLocaleString()}</Text>
       </View>
       <Text style={styles.postText}>{post.text}</Text>

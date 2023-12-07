@@ -7,7 +7,7 @@ type RootStackParamList = {
   Home: { id: number; username: string; name: string };
 };
 
-const Home = ({ route }: any) => {
+const Home = ({ route, navigation }: any) => {
   const [loggedInUser, setLoggedInUser] = useState();
   const [loggedInUsername, setLoggedInUsername] = useState('');
   const [posts, setPosts] = useState([]);
@@ -15,23 +15,26 @@ const Home = ({ route }: any) => {
 
   useEffect(() => {
     init();
-    
+
   }, []);
 
   async function init() {
     const { id, username, name } = route.params.user;
+    console.log('username: ',username)
+    console.log('id: ',id)
     setLoggedInUser(id)
     setLoggedInUsername(username)
     await fetch('http://sdmobile-back-production.up.railway.app/api/posts')
       .then(response => response.json())
       .then(json => {
+        console.log(json)
         setPosts(json);
       });
   }
 
   const handlePost = async () => {
     try {
-       const res = await fetch('http://sdmobile-back-production.up.railway.app/api/posts', {
+      const res = await fetch('http://sdmobile-back-production.up.railway.app/api/post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,29 +49,32 @@ const Home = ({ route }: any) => {
       })
       if (res.status != 201) {
         window.alert('Erro ao criar post.')
-      } 
+      }
       init();
       setNewPostText('');
     } catch (e) {
       console.log('error: ', e)
     }
 
-    
-
-
-
   };
+
+  async function handleNaviteToPost(postID: number) {
+   navigation.navigate('Post', { postID });
+  }
 
   const handleLike = async (postId: number) => {
 
-    // await fetch(`http://sdmobile-back-production.up.railway.app/api/posts/${postId}/like`, {
+    // await fetch(`http://sdmobile-back-production.up.railway.app/api/post/${postId}/like`, {
     //   method: 'POST',
-    // });
-    // Após curtir o post, atualizar a lista de posts
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    // })
+
     init();
   };
 
-  return ( 
+  return (
     <ScrollView style={styles.container}>
 
       <View style={styles.postInputContainer}>
@@ -84,12 +90,17 @@ const Home = ({ route }: any) => {
       </View>
       <View style={styles.postsContainer}>
         {posts.map((post: any) => (
-          <Post
-            key={post.id}
-            post={post}
-            onLikePress={() => handleLike(post.id)}
-            currentUser={loggedInUser ? loggedInUser : '0'}
-          />
+          <>
+            <TouchableOpacity onPress={() => handleNaviteToPost(post.id)}>
+              <Post
+                key={post.id}
+                post={post}
+                onLikePress={() => handleLike(post.id)}
+                currentUser={loggedInUser ? loggedInUser : '0'}
+
+              />
+            </TouchableOpacity>
+          </>
         ))}
       </View>
     </ScrollView>
